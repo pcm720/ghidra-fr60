@@ -141,9 +141,15 @@ public class DVRPFirmwareLoader extends AbstractLibrarySupportLoader {
 		long romEntryPoint = reader.readUnsignedInt(0x40);
 
 		byte[] lowerRomBytes = readBytes(reader, romLowerOffset, romLowerSize, "UDM lower ROM");
-		if (lowerRomBytes.length < ROM_LOWER_VISIBLE_END) {
-			throw new IOException("UDM lower ROM is too small to populate the visible ROM window");
+		if (lowerRomBytes.length > ROM_LOWER_VISIBLE_END) {
+			throw new IOException("UDM lower ROM is larger than the visible ROM window");
 		}
+        // Pad lower ROM with zeros if it's smaller than the visible ROM window
+        if (lowerRomBytes.length < ROM_LOWER_VISIBLE_END) {
+            byte[] paddedLowerRom = new byte[ROM_LOWER_VISIBLE_END];
+            System.arraycopy(lowerRomBytes, 0, paddedLowerRom, 0, lowerRomBytes.length);
+            lowerRomBytes = paddedLowerRom;
+        }
 
 		if (romUpperSize < FIRMWARE_HEADER_SIZE) {
 			throw new IOException("UDM upper ROM size is smaller than a firmware header");
